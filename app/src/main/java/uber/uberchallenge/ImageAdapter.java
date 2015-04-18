@@ -6,16 +6,26 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.applidium.shutterbug.FetchableImageView;
+
+import java.util.ArrayList;
 import java.util.List;
+
+import models.Result;
 
 /**
  * Created by calber on 12/4/15.
  */
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> {
-    private List<Image> products;
+    private List<Result> results;
 
-    public ImageAdapter(List<Image> products) {
-        this.products = products;
+    public ImageAdapter() {
+        this.results = new ArrayList<>();
+    }
+
+    public void setData(List<Result> results) {
+        this.results = results;
+        notifyDataSetChanged();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -25,8 +35,9 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> 
             viewholder = v;
         }
 
-        public void setName(Image product) {
-            ((TextView) viewholder.findViewById(R.id.name)).setText(product.name);
+        public void load(Result result) {
+            ((TextView) viewholder.findViewById(R.id.name)).setText(result.getTitle());
+            ((FetchableImageView) viewholder.findViewById(R.id.image)).setImage(result.getUrl());
         }
     }
 
@@ -38,11 +49,11 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> 
 
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, int position) {
-        viewHolder.setName(products.get(position));
+        viewHolder.load(results.get(position));
     }
 
     @Override
     public int getItemCount() {
-        return products.size();
+        return results.size();
     }
 }
