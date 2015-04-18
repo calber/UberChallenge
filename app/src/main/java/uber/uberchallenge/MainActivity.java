@@ -7,13 +7,18 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.widget.GridLayout;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import models.Response;
@@ -30,43 +35,47 @@ import rx.functions.Func1;
 public class MainActivity extends ActionBarActivity {
 
     private RecyclerView mRecyclerView;
-    private ImageAdapter adapter;
+    private ImageAdapter imageAdapter;
+    private List<String > history;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        history = new ArrayList<>();
+
+        RestAdapter restAdapter = new RestAdapter.Builder().setErrorHandler(new MyErrorHandler())
+                .setEndpoint("https://ajax.googleapis.com/ajax/services/search/").build();
+
+        final Api api = restAdapter.create(Api.class);
 
         mRecyclerView = (RecyclerView) findViewById(R.id.imagegrid);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
-        adapter = new ImageAdapter();
-        ((RecyclerView) findViewById(R.id.imagegrid)).setAdapter(adapter);
+        imageAdapter = new ImageAdapter(api);
+        ((RecyclerView) findViewById(R.id.imagegrid)).setAdapter(imageAdapter);
 
-        RestAdapter restAdapter = new RestAdapter.Builder().setErrorHandler(new MyErrorHandler()).setEndpoint("https://ajax.googleapis" +
-                ".com/ajax/services/search/").build();
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, history);
+        AutoCompleteTextView textView = (AutoCompleteTextView) findViewById(R.id.search);
+        textView.setAdapter(arrayAdapter);
 
-        Api api = restAdapter.create(Api.class);
-
-        api.getImages(getOptionMapFor("query"), new Callback<Response>() {
+        findViewById(R.id.go).setOnClickListener(new View.OnClickListener() {
             @Override
-            public void success(Response response, retrofit.client.Response response2) {
-
-                adapter.setData(response.getResponseData().getResults());
-            }
-
-            @Override
-            public void failure(RetrofitError error) {
-
+            public void onClick(View v) {
+                String query = ((AutoCompleteTextView) findViewById(R.id.search)).getText().toString();
+                imageAdapter.loadData(query);
+                history.add(query);
             }
         });
     }
 
-    private Map<String, String> getOptionMapFor(String query) {
+    private Map<String, String> getOptionMapFor(String query, int page) {
         Map map = new HashMap();
 
         map.put("rsz", "8");
+        map.put("start", String.valueOf(page));
         map.put("v", "1.0");
         map.put("q", query);
 
@@ -78,27 +87,6 @@ public class MainActivity extends ActionBarActivity {
         public Throwable handleError(RetrofitError cause) {
             Log.d("TAG", "Error");
             return null;
-        }
-    }
-
-    private class LoadImage implements Func1<Result, Observable<Result>> {
-        @Override
-        public Observable<Result> call(final Result result) {
-            return Observable.create(new Observable.OnSubscribe<Result>() {
-                @Override
-                public void call(Subscriber<? super Result> subscriber) {
-                    try {
-                        HttpURLConnection connection = (HttpURLConnection) new URL(result.getTbUrl()).openConnection();
-                        connection.connect();
-                        InputStream input = connection.getInputStream();
-                        result.setBitmap(BitmapFactory.decodeStream(input));
-                        subscriber.onNext(result);
-                        subscriber.onCompleted();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
         }
     }
 }
