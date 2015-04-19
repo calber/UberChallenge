@@ -17,6 +17,7 @@
         android:orientation="horizontal"
         android:weightSum="6">
         <AutoCompleteTextView
+            android:lines="1"
             android:id="@+id/search"
             android:layout_width="0dp"
             android:layout_weight="5"

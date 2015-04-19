@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 
 import models.Response;
-import models.ResponseData;
 import models.Result;
 import retrofit.Callback;
 import retrofit.RetrofitError;
@@ -26,38 +25,43 @@ import retrofit.RetrofitError;
  */
 
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> {
-    private static final int PAGESIZE = 5;
-    private Api api;
-    private List<Result> results;
-    int currentpage = 0, pages = 0;
+    static final int PAGESIZE = 8;
+
+    Api api;
+    List<Result> results;
+    int resultcountMax = 0;
+    int start = 0;
     String query;
 
-    public ImageAdapter(Api api) {
-        this.api = api;
+    public ImageAdapter(Api mApi) {
+        api = mApi;
         results = new ArrayList<>();
     }
 
-    private void addData(int page) {
-        callApi(query, page);
+    public void loadDataForQuery(String mQuery) {
+        results = new ArrayList<>();
+        query = mQuery;
+        callApi(mQuery, 0);
     }
 
-    public void loadData(String query) {
-        this.query = query;
-        callApi(query, 0);
+
+    private void addData() {
+        start += PAGESIZE;
+        callApi(query, start);
     }
 
     private void callApi(String query, int page) {
-        Log.d("TAG","requesting:" + page + " " + query);
         api.getImages(getOptionMapFor(query, page), new Callback<Response>() {
             @Override
             public void success(Response response, retrofit.client.Response r) {
                 try {
                     results.addAll(response.getResponseData().getResults());
-                    currentpage = response.getResponseData().getCursor().getCurrentPageIndex();
-                    pages = response.getResponseData().getCursor().getPages().size();
-                    notifyDataSetChanged();
+                    int size = response.getResponseData().getCursor().getPages().size();
+                    resultcountMax = Integer.parseInt(response.getResponseData().getCursor().getPages().get(size-1).getStart());
                 } catch (Exception e) {
                     e.printStackTrace();
+                } finally {
+                    notifyDataSetChanged();
                 }
             }
 
@@ -72,13 +76,14 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> 
 
         map.put("rsz", String.valueOf(PAGESIZE));
         map.put("start", String.valueOf(page));
+        map.put("imgsz","small");
         map.put("v", "1.0");
         map.put("q", query);
 
         return map;
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    static class ViewHolder extends RecyclerView.ViewHolder {
         View viewholder;
 
         public ViewHolder(View v) {
@@ -100,11 +105,8 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> 
 
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, int position) {
-        Log.d("TAG", String.format("page %d, tot %d, pos %d", currentpage, pages, position));
-        if (position % PAGESIZE > PAGESIZE - 2 && currentpage < pages - 1) {
-            // ask for more
-            Log.d("TAG", "adding 1 page");
-            addData(++currentpage);
+        if (resultcountMax > results.size() && position > results.size() - 2) {
+            addData();
         }
         viewHolder.load(results.get(position));
     }
