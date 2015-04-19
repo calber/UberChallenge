@@ -16,6 +16,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:weightSum="6">
+
         <AutoCompleteTextView
             android:lines="1"
             android:id="@+id/search"
@@ -24,7 +25,8 @@
             android:layout_height="wrap_content"/>
         <ImageButton
             android:id="@+id/go"
-            android:src="@android:drawable/ic_menu_search"
+            android:background="#0000"
+            android:src="@android:drawable/ic_search_category_default"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"/>

@@ -41,7 +41,9 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> 
     public void loadDataForQuery(String mQuery) {
         results = new ArrayList<>();
         query = mQuery;
-        callApi(mQuery, 0);
+        start = 0;
+
+        callApi(mQuery, start);
     }
 
 
@@ -72,7 +74,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> 
     }
 
     private Map<String, String> getOptionMapFor(String query, int page) {
-        Map map = new HashMap();
+        Map<String,String> map = new HashMap<>();
 
         map.put("rsz", String.valueOf(PAGESIZE));
         map.put("start", String.valueOf(page));

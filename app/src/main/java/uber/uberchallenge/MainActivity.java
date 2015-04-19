@@ -45,7 +45,7 @@ public class MainActivity extends ActionBarActivity {
         imageAdapter = new ImageAdapter(api);
         ((RecyclerView) findViewById(R.id.imagegrid)).setAdapter(imageAdapter);
 
-        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, history);
+        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, history);
         AutoCompleteTextView textView = (AutoCompleteTextView) findViewById(R.id.search);
         textView.setAdapter(arrayAdapter);
 
@@ -62,7 +62,6 @@ public class MainActivity extends ActionBarActivity {
     private static class MyErrorHandler implements ErrorHandler {
         @Override
         public Throwable handleError(RetrofitError cause) {
-            Log.d("TAG", "Error");
             return null;
         }
     }
